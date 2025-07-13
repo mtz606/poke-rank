@@ -6,7 +6,7 @@ public class AuthResponse {
     
     private String token;
     private String type = "Bearer";
-    private Long id;
+    private String userId;
     private String username;
     private String email;
     private String role;
@@ -15,10 +15,10 @@ public class AuthResponse {
     
     public AuthResponse(String token, User user) {
         this.token = token;
-        this.id = user.getId();
+        this.userId = user.getUserId();
         this.username = user.getUsername();
         this.email = user.getEmail();
-        this.role = user.getRole().name();
+        this.role = user.getRole();
     }
     
     // Getters and Setters
@@ -38,12 +38,12 @@ public class AuthResponse {
         this.type = type;
     }
     
-    public Long getId() {
-        return id;
+    public String getUserId() {
+        return userId;
     }
     
-    public void setId(Long id) {
-        this.id = id;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
     
     public String getUsername() {

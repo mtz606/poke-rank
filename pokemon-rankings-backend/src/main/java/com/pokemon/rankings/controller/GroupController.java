@@ -52,7 +52,7 @@ public class GroupController {
     }
     
     @GetMapping("/{groupId}")
-    public ResponseEntity<GroupResponse> getGroupById(@PathVariable Long groupId) {
+    public ResponseEntity<GroupResponse> getGroupById(@PathVariable String groupId) {
         try {
             GroupResponse group = groupService.getGroupById(groupId);
             return ResponseEntity.ok(group);
@@ -73,7 +73,7 @@ public class GroupController {
     
     @PostMapping("/{groupId}/members")
     public ResponseEntity<Void> addMemberToGroup(
-            @PathVariable Long groupId,
+            @PathVariable String groupId,
             @RequestParam String memberUsername,
             Authentication authentication) {
         try {
@@ -86,7 +86,7 @@ public class GroupController {
     
     @DeleteMapping("/{groupId}/members")
     public ResponseEntity<Void> removeMemberFromGroup(
-            @PathVariable Long groupId,
+            @PathVariable String groupId,
             @RequestParam String memberUsername,
             Authentication authentication) {
         try {
@@ -99,7 +99,7 @@ public class GroupController {
     
     @DeleteMapping("/{groupId}")
     public ResponseEntity<Void> deleteGroup(
-            @PathVariable Long groupId,
+            @PathVariable String groupId,
             Authentication authentication) {
         try {
             groupService.deleteGroup(groupId, authentication.getName());

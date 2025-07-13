@@ -3,44 +3,41 @@ package com.pokemon.rankings.dto;
 import com.pokemon.rankings.entity.Group;
 import com.pokemon.rankings.entity.User;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class GroupResponse {
     
-    private Long id;
+    private String groupId;
     private String name;
     private String description;
-    private UserSummary owner;
+    private String ownerId;
     private List<UserSummary> members;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
     private Boolean isActive;
     
     // Constructors
     public GroupResponse() {}
     
     public GroupResponse(Group group) {
-        this.id = group.getId();
+        this.groupId = group.getGroupId();
         this.name = group.getName();
         this.description = group.getDescription();
-        this.owner = new UserSummary(group.getOwner());
-        this.members = group.getMembers().stream()
-                .map(UserSummary::new)
-                .collect(Collectors.toList());
+        this.ownerId = group.getOwnerId();
+        this.members = List.of(); // Will be populated separately if needed
         this.createdAt = group.getCreatedAt();
         this.updatedAt = group.getUpdatedAt();
         this.isActive = group.getIsActive();
     }
     
     // Getters and Setters
-    public Long getId() {
-        return id;
+    public String getGroupId() {
+        return groupId;
     }
     
-    public void setId(Long id) {
-        this.id = id;
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
     
     public String getName() {
@@ -59,12 +56,12 @@ public class GroupResponse {
         this.description = description;
     }
     
-    public UserSummary getOwner() {
-        return owner;
+    public String getOwnerId() {
+        return ownerId;
     }
     
-    public void setOwner(UserSummary owner) {
-        this.owner = owner;
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
     
     public List<UserSummary> getMembers() {
@@ -75,19 +72,19 @@ public class GroupResponse {
         this.members = members;
     }
     
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
     
-    public LocalDateTime getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
     
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
     
@@ -101,25 +98,25 @@ public class GroupResponse {
     
     // Inner class for user summary
     public static class UserSummary {
-        private Long id;
+        private String userId;
         private String username;
         private String email;
         
         public UserSummary() {}
         
         public UserSummary(User user) {
-            this.id = user.getId();
+            this.userId = user.getUserId();
             this.username = user.getUsername();
             this.email = user.getEmail();
         }
         
         // Getters and Setters
-        public Long getId() {
-            return id;
+        public String getUserId() {
+            return userId;
         }
         
-        public void setId(Long id) {
-            this.id = id;
+        public void setUserId(String userId) {
+            this.userId = userId;
         }
         
         public String getUsername() {

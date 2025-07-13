@@ -36,12 +36,13 @@ public class AuthenticationService {
             throw new RuntimeException("Email already exists");
         }
         
-        // Create new user
+        // Create new user with UUID as userId
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword())
         );
+        user.setUserId(java.util.UUID.randomUUID().toString());
         
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(savedUser);

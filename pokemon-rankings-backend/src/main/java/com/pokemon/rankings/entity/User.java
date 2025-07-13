@@ -1,6 +1,6 @@
 package com.pokemon.rankings.entity;
 
-import jakarta.persistence.*;
+import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,41 +12,38 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-@Entity
-@Table(name = "users")
+@DynamoDBTable(tableName = "Users")
 public class User implements UserDetails {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @DynamoDBHashKey(attributeName = "userId")
+    private String userId;
     
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-    @Column(unique = true, nullable = false)
+    @DynamoDBAttribute(attributeName = "username")
     private String username;
     
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
-    @Column(unique = true, nullable = false)
+    @DynamoDBAttribute(attributeName = "email")
     private String email;
     
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
-    @Column(nullable = false)
+    @DynamoDBAttribute(attributeName = "password")
     private String password;
     
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @DynamoDBAttribute(attributeName = "createdAt")
+    private String createdAt;
     
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @DynamoDBAttribute(attributeName = "updatedAt")
+    private String updatedAt;
     
-    @Column(name = "is_active")
+    @DynamoDBAttribute(attributeName = "isActive")
     private boolean isActive = true;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role")
-    private UserRole role = UserRole.USER;
+    @DynamoDBAttribute(attributeName = "role")
+    private String role = "USER";
     
     public enum UserRole {
         USER, ADMIN
@@ -54,8 +51,8 @@ public class User implements UserDetails {
     
     // Default constructor
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now().toString();
+        this.updatedAt = LocalDateTime.now().toString();
     }
     
     // Constructor with required fields
@@ -67,12 +64,12 @@ public class User implements UserDetails {
     }
     
     // Getters and Setters
-    public Long getId() {
-        return id;
+    public String getUserId() {
+        return userId;
     }
     
-    public void setId(Long id) {
-        this.id = id;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
     
     public String getUsername() {
@@ -99,19 +96,19 @@ public class User implements UserDetails {
         this.password = password;
     }
     
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
     
-    public LocalDateTime getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
     
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
     
@@ -123,18 +120,18 @@ public class User implements UserDetails {
         isActive = active;
     }
     
-    public UserRole getRole() {
+    public String getRole() {
         return role;
     }
     
-    public void setRole(UserRole role) {
+    public void setRole(String role) {
         this.role = role;
     }
     
     // UserDetails implementation
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
     
     @Override
@@ -157,8 +154,7 @@ public class User implements UserDetails {
         return isActive;
     }
     
-    @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now().toString();
     }
 } 

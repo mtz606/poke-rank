@@ -1,63 +1,50 @@
 package com.pokemon.rankings.entity;
 
-import jakarta.persistence.*;
+import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
-@Entity
-@Table(name = "groups")
+@DynamoDBTable(tableName = "Groups")
 public class Group {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @DynamoDBHashKey(attributeName = "groupId")
+    private String groupId;
     
-    @Column(nullable = false, unique = true)
+    @DynamoDBAttribute(attributeName = "name")
     private String name;
     
-    @Column(length = 500)
+    @DynamoDBAttribute(attributeName = "description")
     private String description;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    @DynamoDBAttribute(attributeName = "ownerId")
+    private String ownerId;
     
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "group_members",
-        joinColumns = @JoinColumn(name = "group_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> members = new HashSet<>();
+    @DynamoDBAttribute(attributeName = "createdAt")
+    private String createdAt;
     
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @DynamoDBAttribute(attributeName = "updatedAt")
+    private String updatedAt;
     
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-    
-    @Column(name = "is_active", nullable = false)
+    @DynamoDBAttribute(attributeName = "isActive")
     private Boolean isActive = true;
     
     // Constructors
     public Group() {}
     
-    public Group(String name, String description, User owner) {
+    public Group(String name, String description, String ownerId) {
         this.name = name;
         this.description = description;
-        this.owner = owner;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.ownerId = ownerId;
+        this.createdAt = LocalDateTime.now().toString();
+        this.updatedAt = LocalDateTime.now().toString();
     }
     
     // Getters and Setters
-    public Long getId() {
-        return id;
+    public String getGroupId() {
+        return groupId;
     }
     
-    public void setId(Long id) {
-        this.id = id;
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
     
     public String getName() {
@@ -76,35 +63,27 @@ public class Group {
         this.description = description;
     }
     
-    public User getOwner() {
-        return owner;
+    public String getOwnerId() {
+        return ownerId;
     }
     
-    public void setOwner(User owner) {
-        this.owner = owner;
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
     
-    public Set<User> getMembers() {
-        return members;
-    }
-    
-    public void setMembers(Set<User> members) {
-        this.members = members;
-    }
-    
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
     
-    public LocalDateTime getUpdatedAt() {
+    public String getUpdatedAt() {
         return updatedAt;
     }
     
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
     
@@ -117,20 +96,7 @@ public class Group {
     }
     
     // Helper methods
-    public void addMember(User user) {
-        this.members.add(user);
-    }
-    
-    public void removeMember(User user) {
-        this.members.remove(user);
-    }
-    
-    public boolean isMember(User user) {
-        return this.members.contains(user) || this.owner.equals(user);
-    }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now().toString();
     }
 } 
