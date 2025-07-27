@@ -2,10 +2,12 @@ package com.pokemon.rankings.dto;
 
 import com.pokemon.rankings.entity.Group;
 import com.pokemon.rankings.entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GroupResponse {
     
     private String groupId;
@@ -97,6 +99,7 @@ public class GroupResponse {
     }
     
     // Inner class for user summary
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class UserSummary {
         private String userId;
         private String username;

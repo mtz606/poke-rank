@@ -28,28 +28,71 @@ public class GroupService {
     private GroupMemberRepository groupMemberRepository;
     
     public GroupResponse createGroup(CreateGroupRequest request, String username) {
-        // Find the user creating the group
-        User owner = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Check if group name already exists
-        if (groupRepository.findByNameAndIsActiveTrue(request.getName()).isPresent()) {
-            throw new RuntimeException("Group name already exists");
+        try {
+            System.out.println("[DEBUG] GroupService.createGroup called with username: " + username);
+            
+            // Find the user creating the group
+            User owner = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            System.out.println("[DEBUG] Found user: " + owner.getUsername());
+            
+            // Check if group name already exists
+            if (groupRepository.findByNameAndIsActiveTrue(request.getName()).isPresent()) {
+                throw new RuntimeException("Group name already exists");
+            }
+            System.out.println("[DEBUG] Group name is available");
+            
+            // Create the group
+            Group group = new Group(request.getName(), request.getDescription(), owner.getUserId());
+            group.setGroupId(java.util.UUID.randomUUID().toString());
+            System.out.println("[DEBUG] Created group with ID: " + group.getGroupId());
+            
+            try {
+                group = groupRepository.save(group);
+                System.out.println("[DEBUG] Group saved successfully");
+            } catch (Exception e) {
+                System.out.println("[DEBUG] Error saving group: " + e.getMessage());
+                e.printStackTrace();
+                throw e;
+            }
+            
+            // Add owner as member with OWNER role
+            GroupMember ownerMember = new GroupMember(group.getGroupId(), owner.getUserId(), "OWNER");
+            try {
+                groupMemberRepository.save(ownerMember);
+                System.out.println("[DEBUG] Owner member saved successfully");
+            } catch (Exception e) {
+                System.out.println("[DEBUG] Error saving owner member: " + e.getMessage());
+                e.printStackTrace();
+                throw e;
+            }
+            
+            return createGroupResponseWithMembers(group);
+        } catch (Exception e) {
+            System.out.println("[DEBUG] GroupService.createGroup failed with exception: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create group: " + e.getMessage(), e);
         }
-        
-        // Create the group
-        Group group = new Group(request.getName(), request.getDescription(), owner.getUserId());
-        group.setGroupId(java.util.UUID.randomUUID().toString());
-        group = groupRepository.save(group);
-        
-        // Add owner as member with OWNER role
-        GroupMember ownerMember = new GroupMember(group.getGroupId(), owner.getUserId(), "OWNER");
-        groupMemberRepository.save(ownerMember);
-        
-        return new GroupResponse(group);
+    }
+
+    // Helper to populate members in GroupResponse
+    private GroupResponse createGroupResponseWithMembers(Group group) {
+        GroupResponse response = new GroupResponse(group);
+        // Get all members of the group
+        List<GroupMember> groupMembers = groupMemberRepository.findByGroupId(group.getGroupId());
+        // Convert GroupMember to UserSummary
+        List<GroupResponse.UserSummary> members = groupMembers.stream()
+                .map(member -> {
+                    User user = userRepository.findById(member.getUserId()).orElse(null);
+                    return user != null ? new GroupResponse.UserSummary(user) : null;
+                })
+                .filter(member -> member != null)
+                .collect(Collectors.toList());
+        response.setMembers(members);
+        return response;
     }
     
-    public List<GroupResponse> getUserGroups(String username) {
+    public List<GroupResponse> getMyGroups(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
@@ -74,14 +117,14 @@ public class GroupService {
                 .collect(Collectors.toList());
         
         return groups.stream()
-                .map(GroupResponse::new)
+                .map(this::createGroupResponseWithMembers)
                 .collect(Collectors.toList());
     }
     
     public List<GroupResponse> getAllGroups() {
         List<Group> groups = groupRepository.findByIsActiveTrue();
         return groups.stream()
-                .map(GroupResponse::new)
+                .map(this::createGroupResponseWithMembers)
                 .collect(Collectors.toList());
     }
     
@@ -93,13 +136,13 @@ public class GroupService {
             throw new RuntimeException("Group is not active");
         }
         
-        return new GroupResponse(group);
+        return createGroupResponseWithMembers(group);
     }
     
     public List<GroupResponse> searchGroups(String searchTerm) {
         List<Group> groups = groupRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(searchTerm);
         return groups.stream()
-                .map(GroupResponse::new)
+                .map(this::createGroupResponseWithMembers)
                 .collect(Collectors.toList());
     }
     

@@ -44,11 +44,12 @@ public class GroupRepository {
         Map<String, AttributeValue> eav = new HashMap<>();
         eav.put(":name", new AttributeValue().withS(name));
         eav.put(":isActive", new AttributeValue().withBOOL(true));
-        
+        Map<String, String> ean = new HashMap<>();
+        ean.put("#groupName", "groupName");
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
-                .withFilterExpression("name = :name AND isActive = :isActive")
-                .withExpressionAttributeValues(eav);
-        
+                .withFilterExpression("#groupName = :name AND isActive = :isActive")
+                .withExpressionAttributeValues(eav)
+                .withExpressionAttributeNames(ean);
         List<Group> groups = dynamoDBMapper.scan(Group.class, scanExpression);
         return groups.isEmpty() ? Optional.empty() : Optional.of(groups.get(0));
     }
@@ -68,11 +69,12 @@ public class GroupRepository {
         Map<String, AttributeValue> eav = new HashMap<>();
         eav.put(":name", new AttributeValue().withS(name));
         eav.put(":isActive", new AttributeValue().withBOOL(true));
-        
+        Map<String, String> ean = new HashMap<>();
+        ean.put("#groupName", "groupName");
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
-                .withFilterExpression("contains(name, :name) AND isActive = :isActive")
-                .withExpressionAttributeValues(eav);
-        
+                .withFilterExpression("contains(#groupName, :name) AND isActive = :isActive")
+                .withExpressionAttributeValues(eav)
+                .withExpressionAttributeNames(ean);
         return dynamoDBMapper.scan(Group.class, scanExpression);
     }
 } 

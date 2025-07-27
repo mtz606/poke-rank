@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @DynamoDBTable(tableName = "Users")
 public class User implements UserDetails {
@@ -40,27 +41,28 @@ public class User implements UserDetails {
     private String updatedAt;
     
     @DynamoDBAttribute(attributeName = "isActive")
-    private boolean isActive = true;
+    private String isActive = "true";
     
     @DynamoDBAttribute(attributeName = "role")
     private String role = "USER";
     
-    public enum UserRole {
-        USER, ADMIN
-    }
-    
     // Default constructor
     public User() {
+        this.userId = UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now().toString();
         this.updatedAt = LocalDateTime.now().toString();
+        this.isActive = Boolean.TRUE.toString();
     }
     
     // Constructor with required fields
     public User(String username, String email, String password) {
-        this();
+        this.userId = UUID.randomUUID().toString();
         this.username = username;
         this.email = email;
         this.password = password;
+        this.createdAt = LocalDateTime.now().toString();
+        this.updatedAt = LocalDateTime.now().toString();
+        this.isActive = Boolean.TRUE.toString();
     }
     
     // Getters and Setters
@@ -112,12 +114,12 @@ public class User implements UserDetails {
         this.updatedAt = updatedAt;
     }
     
-    public boolean isActive() {
-        return isActive;
+    public Boolean isActive() {
+        return Boolean.parseBoolean(isActive);
     }
     
-    public void setActive(boolean active) {
-        isActive = active;
+    public void setActive(Boolean active) {
+        this.isActive = active.toString();
     }
     
     public String getRole() {
@@ -130,28 +132,33 @@ public class User implements UserDetails {
     
     // UserDetails implementation
     @Override
+    @DynamoDBIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
     
     @Override
+    @DynamoDBIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
     
     @Override
+    @DynamoDBIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
     
     @Override
+    @DynamoDBIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
     
     @Override
+    @DynamoDBIgnore
     public boolean isEnabled() {
-        return isActive;
+        return Boolean.parseBoolean(isActive);
     }
     
     public void preUpdate() {

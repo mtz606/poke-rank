@@ -13,12 +13,11 @@ public class AuthResponse {
     
     public AuthResponse() {}
     
-    public AuthResponse(String token, User user) {
+    public AuthResponse(String token, String username, String email, String role) {
         this.token = token;
-        this.userId = user.getUserId();
-        this.username = user.getUsername();
-        this.email = user.getEmail();
-        this.role = user.getRole();
+        this.username = username;
+        this.email = email;
+        this.role = role;
     }
     
     // Getters and Setters

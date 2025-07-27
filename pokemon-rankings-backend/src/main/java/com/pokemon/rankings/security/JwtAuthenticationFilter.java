@@ -29,38 +29,61 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
     
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        System.out.println("[DEBUG] JWT Filter - Request path: " + path);
+        
+        boolean shouldSkip = path.contains("/auth/register") || 
+                           path.contains("/auth/login") || 
+                           path.contains("/auth/test") ||
+                           path.contains("/auth/debug");
+        
+        System.out.println("[DEBUG] JWT Filter - Should skip: " + shouldSkip);
+        return shouldSkip;
+    }
+    
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+        System.out.println("[DEBUG] JWT Filter - Processing request: " + request.getRequestURI());
+        
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("[DEBUG] JWT Filter - No Bearer token, continuing...");
             filterChain.doFilter(request, response);
             return;
         }
         
-        jwt = authHeader.substring(7);
-        username = jwtService.extractUsername(jwt);
-        
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+        try {
+            jwt = authHeader.substring(7);
+            username = jwtService.extractUsername(jwt);
             
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+                
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            System.out.println("[DEBUG] JWT Filter - Error processing token: " + e.getMessage());
+            e.printStackTrace();
         }
+        
         filterChain.doFilter(request, response);
     }
 } 

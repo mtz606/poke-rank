@@ -76,7 +76,17 @@ public class JwtService {
     }
     
     private SecretKey getSignInKey() {
-        byte[] keyBytes = secretKey.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+        try {
+            // Convert hex string to bytes
+            byte[] keyBytes = new byte[secretKey.length() / 2];
+            for (int i = 0; i < keyBytes.length; i++) {
+                int index = i * 2;
+                keyBytes[i] = (byte) Integer.parseInt(secretKey.substring(index, index + 2), 16);
+            }
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (Exception e) {
+            // Fallback to using the string directly
+            return Keys.hmacShaKeyFor(secretKey.getBytes());
+        }
     }
 } 

@@ -9,7 +9,7 @@ public class Group {
     @DynamoDBHashKey(attributeName = "groupId")
     private String groupId;
     
-    @DynamoDBAttribute(attributeName = "name")
+    @DynamoDBAttribute(attributeName = "groupName")
     private String name;
     
     @DynamoDBAttribute(attributeName = "description")
@@ -25,7 +25,7 @@ public class Group {
     private String updatedAt;
     
     @DynamoDBAttribute(attributeName = "isActive")
-    private Boolean isActive = true;
+    private String isActive = "true";
     
     // Constructors
     public Group() {}
@@ -88,11 +88,11 @@ public class Group {
     }
     
     public Boolean getIsActive() {
-        return isActive;
+        return "true".equals(isActive);
     }
     
     public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+        this.isActive = isActive ? "true" : "false";
     }
     
     // Helper methods

@@ -4,16 +4,18 @@ import com.pokemon.rankings.dto.CreateGroupRequest;
 import com.pokemon.rankings.dto.GroupResponse;
 import com.pokemon.rankings.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/groups")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class GroupController {
     
     @Autowired
@@ -24,20 +26,23 @@ public class GroupController {
             @Valid @RequestBody CreateGroupRequest request,
             Authentication authentication) {
         try {
-            GroupResponse group = groupService.createGroup(request, authentication.getName());
-            return ResponseEntity.ok(group);
+            GroupResponse response = groupService.createGroup(request, authentication.getName());
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
         }
     }
     
     @GetMapping("/my-groups")
     public ResponseEntity<List<GroupResponse>> getMyGroups(Authentication authentication) {
         try {
-            List<GroupResponse> groups = groupService.getUserGroups(authentication.getName());
+            String username = authentication.getName();
+            List<GroupResponse> groups = groupService.getMyGroups(username);
             return ResponseEntity.ok(groups);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
     }
     

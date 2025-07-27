@@ -27,27 +27,31 @@ public class AuthenticationService {
     }
     
     public AuthResponse register(RegisterRequest request) {
+        System.out.println("[DEBUG] AuthenticationService.register called with: username=" + request.getUsername() + ", email=" + request.getEmail());
         // Check if user already exists
         if (userRepository.existsByUsername(request.getUsername())) {
+            System.out.println("[DEBUG] Username already exists: " + request.getUsername());
             throw new RuntimeException("Username already exists");
         }
         
         if (userRepository.existsByEmail(request.getEmail())) {
+            System.out.println("[DEBUG] Email already exists: " + request.getEmail());
             throw new RuntimeException("Email already exists");
         }
         
         // Create new user with UUID as userId
-        User user = new User(
-                request.getUsername(),
-                request.getEmail(),
-                passwordEncoder.encode(request.getPassword())
-        );
-        user.setUserId(java.util.UUID.randomUUID().toString());
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole("USER");
         
+        System.out.println("[DEBUG] Saving new user to DynamoDB: username=" + user.getUsername() + ", email=" + user.getEmail());
         User savedUser = userRepository.save(user);
+        System.out.println("[DEBUG] User saved successfully: userId=" + savedUser.getUserId());
         String jwtToken = jwtService.generateToken(savedUser);
         
-        return new AuthResponse(jwtToken, savedUser);
+        return new AuthResponse(jwtToken, savedUser.getUsername(), savedUser.getEmail(), savedUser.getRole());
     }
     
     public AuthResponse authenticate(LoginRequest request) {
@@ -64,7 +68,7 @@ public class AuthenticationService {
             
             String jwtToken = jwtService.generateToken(user);
             
-            return new AuthResponse(jwtToken, user);
+            return new AuthResponse(jwtToken, user.getUsername(), user.getEmail(), user.getRole());
         } catch (Exception e) {
             throw new RuntimeException("Invalid username or password");
         }
