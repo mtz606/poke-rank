@@ -2,6 +2,7 @@ package com.pokemon.rankings.controller;
 
 import com.pokemon.rankings.dto.CreateGroupRequest;
 import com.pokemon.rankings.dto.GroupResponse;
+import com.pokemon.rankings.dto.GroupDetailResponse;
 import com.pokemon.rankings.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -57,11 +58,14 @@ public class GroupController {
     }
     
     @GetMapping("/{groupId}")
-    public ResponseEntity<GroupResponse> getGroupById(@PathVariable String groupId) {
+    public ResponseEntity<GroupDetailResponse> getGroupById(@PathVariable String groupId) {
         try {
-            GroupResponse group = groupService.getGroupById(groupId);
+            System.out.println("[DEBUG] GroupController.getGroupById called with groupId: " + groupId);
+            GroupDetailResponse group = groupService.getGroupById(groupId);
+            System.out.println("[DEBUG] GroupController.getGroupById returning group: " + group.getName());
             return ResponseEntity.ok(group);
         } catch (RuntimeException e) {
+            System.out.println("[DEBUG] GroupController.getGroupById error: " + e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }

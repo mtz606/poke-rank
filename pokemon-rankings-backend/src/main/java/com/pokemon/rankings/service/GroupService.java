@@ -2,18 +2,22 @@ package com.pokemon.rankings.service;
 
 import com.pokemon.rankings.dto.CreateGroupRequest;
 import com.pokemon.rankings.dto.GroupResponse;
+import com.pokemon.rankings.dto.GroupDetailResponse;
 import com.pokemon.rankings.entity.Group;
 import com.pokemon.rankings.entity.GroupMember;
 import com.pokemon.rankings.entity.User;
+import com.pokemon.rankings.entity.UserCardCollection;
 import com.pokemon.rankings.repository.GroupRepository;
 import com.pokemon.rankings.repository.GroupMemberRepository;
 import com.pokemon.rankings.repository.UserRepository;
+import com.pokemon.rankings.repository.UserCardCollectionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 public class GroupService {
@@ -26,6 +30,9 @@ public class GroupService {
     
     @Autowired
     private GroupMemberRepository groupMemberRepository;
+    
+    @Autowired
+    private UserCardCollectionRepository userCardCollectionRepository;
     
     public GroupResponse createGroup(CreateGroupRequest request, String username) {
         try {
@@ -128,15 +135,73 @@ public class GroupService {
                 .collect(Collectors.toList());
     }
     
-    public GroupResponse getGroupById(String groupId) {
+    public GroupDetailResponse getGroupById(String groupId) {
+        System.out.println("[DEBUG] GroupService.getGroupById called with groupId: " + groupId);
+        
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
+        
+        System.out.println("[DEBUG] Found group: " + group.getName() + ", isActive: " + group.getIsActive());
         
         if (!group.getIsActive()) {
             throw new RuntimeException("Group is not active");
         }
         
-        return createGroupResponseWithMembers(group);
+        GroupResponse groupResponse = createGroupResponseWithMembers(group);
+        List<GroupDetailResponse.MemberRanking> leaderboard = calculateLeaderboard(groupId);
+        
+        System.out.println("[DEBUG] Created GroupDetailResponse with leaderboard size: " + leaderboard.size());
+        
+        return new GroupDetailResponse(groupResponse, leaderboard);
+    }
+    
+    private List<GroupDetailResponse.MemberRanking> calculateLeaderboard(String groupId) {
+        try {
+            // Get all members of the group
+            List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
+            
+            List<GroupDetailResponse.MemberRanking> leaderboard = members.stream()
+                    .map(member -> {
+                        User user = userRepository.findById(member.getUserId()).orElse(null);
+                        if (user == null) return null;
+                        
+                        // Get user's card collection
+                        List<UserCardCollection> userCards;
+                        try {
+                            userCards = userCardCollectionRepository.findByUserId(user.getUserId());
+                        } catch (Exception e) {
+                            System.out.println("[DEBUG] UserCardCollection table not found, using empty list for user: " + user.getUsername());
+                            userCards = new ArrayList<>();
+                        }
+                        
+                        // Calculate total value and card count
+                        double totalValue = 0.0;
+                        int cardCount = 0;
+                        
+                        for (UserCardCollection card : userCards) {
+                            // For now, we'll use a placeholder value since we don't have real card prices
+                            // In a real implementation, you'd fetch card prices from an external API
+                            double cardValue = 1.0; // Placeholder: $1 per card
+                            totalValue += cardValue * card.getQuantity();
+                            cardCount += card.getQuantity();
+                        }
+                        
+                        return new GroupDetailResponse.MemberRanking(user.getUsername(), totalValue, cardCount, 0);
+                    })
+                    .filter(member -> member != null)
+                    .sorted((a, b) -> Double.compare(b.getTotalValue(), a.getTotalValue())) // Sort by value descending
+                    .collect(Collectors.toList());
+            
+            // Add ranks
+            for (int i = 0; i < leaderboard.size(); i++) {
+                leaderboard.get(i).setRank(i + 1);
+            }
+            
+            return leaderboard;
+        } catch (Exception e) {
+            System.out.println("[DEBUG] Error calculating leaderboard: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
     
     public List<GroupResponse> searchGroups(String searchTerm) {

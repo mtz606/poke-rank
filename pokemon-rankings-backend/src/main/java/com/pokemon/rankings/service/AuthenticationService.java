@@ -56,6 +56,18 @@ public class AuthenticationService {
     
     public AuthResponse authenticate(LoginRequest request) {
         try {
+            System.out.println("[DEBUG] AuthenticationService.authenticate called with: username=" + request.getUsername());
+            
+            // First check if user exists
+            System.out.println("[DEBUG] Looking for user: " + request.getUsername());
+            User user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> {
+                        System.out.println("[DEBUG] User not found: " + request.getUsername());
+                        return new RuntimeException("User not found");
+                    });
+            
+            System.out.println("[DEBUG] User found: " + user.getUsername() + ", email: " + user.getEmail() + ", password hash: " + user.getPassword().substring(0, Math.min(20, user.getPassword().length())) + "...");
+            
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
@@ -63,13 +75,15 @@ public class AuthenticationService {
                     )
             );
             
-            User user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            System.out.println("[DEBUG] Authentication successful for: " + request.getUsername());
             
             String jwtToken = jwtService.generateToken(user);
+            System.out.println("[DEBUG] JWT token generated successfully");
             
             return new AuthResponse(jwtToken, user.getUsername(), user.getEmail(), user.getRole());
         } catch (Exception e) {
+            System.out.println("[DEBUG] Authentication failed for: " + request.getUsername() + ", error: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Invalid username or password");
         }
     }

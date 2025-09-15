@@ -59,6 +59,9 @@ public class DynamoDBConfig {
         
         // Create GroupMembers table
         createGroupMembersTableIfNotExists(dynamoDB);
+        
+        // Create UserCardCollection table
+        createUserCardCollectionTableIfNotExists(dynamoDB);
     }
 
     private void createTableIfNotExists(AmazonDynamoDB dynamoDB, String tableName, String hashKeyName) {
@@ -94,6 +97,27 @@ public class DynamoDBConfig {
             System.out.println("Created table: GroupMembers");
         } catch (ResourceInUseException e) {
             System.out.println("Table GroupMembers already exists");
+        }
+    }
+    
+    private void createUserCardCollectionTableIfNotExists(AmazonDynamoDB dynamoDB) {
+        try {
+            CreateTableRequest createTableRequest = new CreateTableRequest()
+                    .withTableName("UserCardCollection")
+                    .withKeySchema(
+                            new KeySchemaElement("userId", KeyType.HASH),
+                            new KeySchemaElement("cardId", KeyType.RANGE)
+                    )
+                    .withAttributeDefinitions(
+                            new AttributeDefinition("userId", ScalarAttributeType.S),
+                            new AttributeDefinition("cardId", ScalarAttributeType.S)
+                    )
+                    .withProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
+
+            dynamoDB.createTable(createTableRequest);
+            System.out.println("Created table: UserCardCollection");
+        } catch (ResourceInUseException e) {
+            System.out.println("Table UserCardCollection already exists");
         }
     }
 } 

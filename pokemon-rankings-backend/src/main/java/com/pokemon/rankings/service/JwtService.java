@@ -38,6 +38,15 @@ public class JwtService {
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
     
+    // Overloaded method for User entity
+    public String generateToken(com.pokemon.rankings.entity.User user) {
+        return generateToken(new HashMap<>(), user);
+    }
+    
+    public String generateToken(Map<String, Object> extraClaims, com.pokemon.rankings.entity.User user) {
+        return buildToken(extraClaims, user, jwtExpiration);
+    }
+    
     private String buildToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails,
@@ -47,6 +56,21 @@ public class JwtService {
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+    
+    private String buildToken(
+            Map<String, Object> extraClaims,
+            com.pokemon.rankings.entity.User user,
+            long expiration
+    ) {
+        return Jwts
+                .builder()
+                .setClaims(extraClaims)
+                .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)

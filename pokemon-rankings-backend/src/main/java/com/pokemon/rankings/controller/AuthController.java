@@ -38,12 +38,20 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        System.out.println("[DEBUG] /auth/login called with: username=" + request.getUsername());
         try {
             AuthResponse response = authenticationService.authenticate(request);
+            System.out.println("[DEBUG] Login successful for username=" + request.getUsername());
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            System.out.println("[DEBUG] Login failed for username=" + request.getUsername() + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            System.out.println("[DEBUG] Unexpected error during login: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Unexpected error: " + e.getMessage());
         }
     }
     

@@ -62,12 +62,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         try {
             jwt = authHeader.substring(7);
+            System.out.println("[DEBUG] JWT Filter - Extracted JWT: " + jwt.substring(0, Math.min(50, jwt.length())) + "...");
             username = jwtService.extractUsername(jwt);
+            System.out.println("[DEBUG] JWT Filter - Extracted username: " + username);
             
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                System.out.println("[DEBUG] JWT Filter - Loading user details for: " + username);
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+                System.out.println("[DEBUG] JWT Filter - User details loaded: " + userDetails.getUsername());
                 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+                    System.out.println("[DEBUG] JWT Filter - Token is valid, setting authentication");
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -77,7 +82,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("[DEBUG] JWT Filter - Authentication set successfully");
+                } else {
+                    System.out.println("[DEBUG] JWT Filter - Token is invalid");
                 }
+            } else {
+                System.out.println("[DEBUG] JWT Filter - Username is null or authentication already exists");
             }
         } catch (Exception e) {
             System.out.println("[DEBUG] JWT Filter - Error processing token: " + e.getMessage());
