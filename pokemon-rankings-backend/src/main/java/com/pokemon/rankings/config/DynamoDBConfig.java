@@ -14,30 +14,47 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DynamoDBConfig {
 
-    @Value("${amazon.dynamodb.endpoint}")
+    @Value("${amazon.dynamodb.endpoint:}")
     private String dynamoDbEndpoint;
 
-    @Value("${amazon.aws.accesskey}")
+    @Value("${amazon.aws.accesskey:}")
     private String accessKey;
 
-    @Value("${amazon.aws.secretkey}")
+    @Value("${amazon.aws.secretkey:}")
     private String secretKey;
 
-    @Value("${amazon.aws.region}")
+    @Value("${amazon.aws.region:us-east-1}")
     private String region;
 
     @Bean
     public AmazonDynamoDB amazonDynamoDB() {
-        AmazonDynamoDB dynamoDB = AmazonDynamoDBClientBuilder.standard()
-                .withEndpointConfiguration(
-                        new AwsClientBuilder.EndpointConfiguration(dynamoDbEndpoint, region)
-                )
-                .withCredentials(
-                        new AWSStaticCredentialsProvider(
-                                new BasicAWSCredentials(accessKey, secretKey)
-                        )
-                )
-                .build();
+        AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
+        
+        // If endpoint is provided (local development), use it
+        // Otherwise, use default AWS DynamoDB service (production)
+        if (dynamoDbEndpoint != null && !dynamoDbEndpoint.isEmpty()) {
+            builder.withEndpointConfiguration(
+                    new AwsClientBuilder.EndpointConfiguration(dynamoDbEndpoint, region)
+            );
+        } else {
+            // For production, use default AWS DynamoDB endpoint
+            builder.withRegion(region);
+        }
+        
+        // Set credentials if provided
+        // For local development: use provided credentials (even if "local")
+        // For production with IAM roles: credentials are automatically provided, so we skip
+        if (accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty()) {
+            builder.withCredentials(
+                    new AWSStaticCredentialsProvider(
+                            new BasicAWSCredentials(accessKey, secretKey)
+                    )
+            );
+        }
+        // If credentials are not provided, AWS SDK will use default credential chain
+        // (IAM roles, environment variables, ~/.aws/credentials, etc.)
+        
+        AmazonDynamoDB dynamoDB = builder.build();
 
         // Create tables if they don't exist
         createTablesIfNotExist(dynamoDB);
