@@ -4,32 +4,6 @@
     <meta charset="UTF-8" />
     <title>Pokemon Rankings</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script type="text/javascript">
-      // Single Page Apps for GitHub Pages
-      // https://github.com/rafgraph/spa-github-pages
-      // This script handles redirects from 404.html
-      (function(l) {
-        // Only process if we have a redirect query parameter (from 404.html)
-        if (l.search && l.search[1] === '/') {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          var newPath = l.pathname.slice(0, -1) + decoded + l.hash;
-          // Wait for DOM and React to be ready
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-              setTimeout(function() {
-                window.history.replaceState(null, null, newPath);
-              }, 100);
-            });
-          } else {
-            setTimeout(function() {
-              window.history.replaceState(null, null, newPath);
-            }, 100);
-          }
-        }
-      }(window.location))
-    </script>
     <script type="module" crossorigin src="/poke-rank/assets/index-tQ9B3SQs.js"></script>
     <link rel="stylesheet" crossorigin href="/poke-rank/assets/index-DwWyKrjk.css">
   </head>
@@ -37,5 +11,3 @@
     <div id="root"></div>
   </body>
 </html>
-
-
