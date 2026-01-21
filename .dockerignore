@@ -1,0 +1,13 @@
+.git/
+.gitignore
+*.md
+.DS_Store
+.idea/
+.vscode/
+*.pem
+*.pub
+dynamodb-local/
+target/
+node_modules/
+dist/
+

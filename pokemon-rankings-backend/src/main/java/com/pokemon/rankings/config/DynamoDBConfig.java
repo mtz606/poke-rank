@@ -57,7 +57,8 @@ public class DynamoDBConfig {
         AmazonDynamoDB dynamoDB = builder.build();
 
         // Create tables if they don't exist
-        createTablesIfNotExist(dynamoDB);
+        // DISABLED: Tables are created manually in AWS DynamoDB console
+        // createTablesIfNotExist(dynamoDB);
 
         return dynamoDB;
     }

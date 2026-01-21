@@ -1,0 +1,55 @@
+version: '3.8'
+
+# Production docker-compose (uses AWS DynamoDB instead of local)
+services:
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./pokemon-rankings-backend
+      dockerfile: Dockerfile
+    container_name: pokemon-backend-prod
+    ports:
+      - "8080:8080"
+    environment:
+      # DynamoDB Configuration (AWS - no endpoint means use AWS service)
+      - AMAZON_DYNAMODB_ENDPOINT=
+      - AMAZON_AWS_ACCESSKEY=${AMAZON_AWS_ACCESSKEY}
+      - AMAZON_AWS_SECRETKEY=${AMAZON_AWS_SECRETKEY}
+      - AMAZON_AWS_REGION=${AMAZON_AWS_REGION:-us-east-1}
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=86400000
+      
+      # Pokemon TCG API
+      - POKEMON_TCG_API_KEY=${POKEMON_TCG_API_KEY:-}
+      - POKEMON_TCG_API_BASE_URL=https://api.pokemontcg.io/v2
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      
+      # Logging
+      - LOG_LEVEL_COM_POKEMON=INFO
+      - LOG_LEVEL_SPRING_SECURITY=WARN
+      - LOG_LEVEL_SPRING_WEB=WARN
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./pokemon-rankings-frontend
+      dockerfile: Dockerfile
+    container_name: pokemon-frontend-prod
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/api}
+    depends_on:
+      - backend
+    restart: unless-stopped
+

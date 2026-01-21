@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Local DynamoDB for development
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: pokemon-dynamodb
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pokemon-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./pokemon-rankings-backend
+      dockerfile: Dockerfile
+    container_name: pokemon-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      # DynamoDB Configuration (local)
+      - AMAZON_DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+      - AMAZON_AWS_ACCESSKEY=local
+      - AMAZON_AWS_SECRETKEY=local
+      - AMAZON_AWS_REGION=us-east-1
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      
+      # Pokemon TCG API (optional - can be empty)
+      - POKEMON_TCG_API_KEY=${POKEMON_TCG_API_KEY:-}
+      - POKEMON_TCG_API_BASE_URL=https://api.pokemontcg.io/v2
+      
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}
+      
+      # Logging
+      - LOG_LEVEL_COM_POKEMON=INFO
+      - LOG_LEVEL_SPRING_SECURITY=WARN
+      - LOG_LEVEL_SPRING_WEB=WARN
+    depends_on:
+      dynamodb-local:
+        condition: service_healthy
+    networks:
+      - pokemon-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/auth/test || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./pokemon-rankings-frontend
+      dockerfile: Dockerfile
+    container_name: pokemon-frontend
+    ports:
+      - "3000:80"
+    env_file:
+      - .env
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/api}
+    depends_on:
+      - backend
+    networks:
+      - pokemon-network
+
+networks:
+  pokemon-network:
+    driver: bridge
+
+# Optional: Add volumes for development
+# volumes:
+#   dynamodb-data:
+#     driver: local
+
