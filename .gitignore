@@ -44,4 +44,7 @@ mvnw.cmd
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Kubernetes secrets (legacy; k8s deployment removed)
+# k8s/secret.yaml
